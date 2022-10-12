@@ -1,11 +1,3 @@
-# Piped-Backend
+# Rusted-invidious-yt-api
 
-An advanced open-source privacy friendly alternative to YouTube, crafted with the help of [NewPipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor).
-
-## Official Frontend
-
--   VueJS frontend - [Piped](https://github.com/TeamPiped/Piped)
-
-## Community Projects
-
--   See https://github.com/TeamPiped/Piped#made-with-piped
+The api backbone for most data used by rusted invidious, crafted with the help of [NewPipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor) and ofcoures huge thanks to [TeamPiped](https://github.com/TeamPiped/Piped-Backend) for creating an api around the extractor.
