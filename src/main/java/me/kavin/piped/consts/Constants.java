@@ -35,28 +35,12 @@ public class Constants {
 
     public static final String PUBLIC_URL;
 
-    public static final String PUBSUB_URL;
-    
-    public static final String PUBSUB_HUB_URL;
-
     public static final String HTTP_PROXY;
 
     public static final String FRONTEND_URL;
 
     public static final OkHttpClient h2client;
     public static final OkHttpClient h2_no_redir_client;
-
-    public static final boolean COMPROMISED_PASSWORD_CHECK;
-
-    public static final boolean DISABLE_REGISTRATION;
-
-    public static final int FEED_RETENTION;
-
-    public static final boolean DISABLE_TIMERS;
-
-    public static final String RYD_PROXY_URL;
-
-    public static final boolean DISABLE_RYD;
 
     public static final boolean DISABLE_SERVER;
 
@@ -86,16 +70,8 @@ public class Constants {
             CAPTCHA_BASE_URL = getProperty(prop, "CAPTCHA_BASE_URL");
             CAPTCHA_API_KEY = getProperty(prop, "CAPTCHA_API_KEY");
             PUBLIC_URL = getProperty(prop, "API_URL");
-            PUBSUB_URL = getProperty(prop, "PUBSUB_URL", PUBLIC_URL);
-            PUBSUB_HUB_URL = getProperty(prop, "PUBSUB_HUB_URL", "https://pubsubhubbub.appspot.com/subscribe");
             HTTP_PROXY = getProperty(prop, "HTTP_PROXY");
             FRONTEND_URL = getProperty(prop, "FRONTEND_URL", "https://piped.kavin.rocks");
-            COMPROMISED_PASSWORD_CHECK = Boolean.parseBoolean(getProperty(prop, "COMPROMISED_PASSWORD_CHECK", "true"));
-            DISABLE_REGISTRATION = Boolean.parseBoolean(getProperty(prop, "DISABLE_REGISTRATION", "false"));
-            FEED_RETENTION = Integer.parseInt(getProperty(prop, "FEED_RETENTION", "30"));
-            DISABLE_TIMERS = Boolean.parseBoolean(getProperty(prop, "DISABLE_TIMERS", "false"));
-            RYD_PROXY_URL = getProperty(prop, "RYD_PROXY_URL", "https://ryd-proxy.kavin.rocks");
-            DISABLE_RYD = Boolean.parseBoolean(getProperty(prop, "DISABLE_RYD", "false"));
             DISABLE_SERVER = Boolean.parseBoolean(getProperty(prop, "DISABLE_SERVER", "false"));
             DISABLE_LBRY = Boolean.parseBoolean(getProperty(prop, "DISABLE_LBRY", "false"));
             SUBSCRIPTIONS_EXPIRY = Integer.parseInt(getProperty(prop, "SUBSCRIPTIONS_EXPIRY", "30"));

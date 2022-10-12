@@ -13,8 +13,6 @@ WORKDIR /app/
 
 COPY --from=build /app/build/libs/piped-1.0-all.jar /app/piped.jar
 
-COPY VERSION .
-
 EXPOSE 8080
 
 CMD java -jar /app/piped.jar

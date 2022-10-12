@@ -1,8 +1,6 @@
 package me.kavin.piped;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.rometools.rome.feed.synd.SyndFeed;
-import com.rometools.rome.io.SyndFeedInput;
 import io.activej.config.Config;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpMethod;
@@ -14,25 +12,16 @@ import io.activej.inject.module.Module;
 import io.activej.launchers.http.MultithreadedHttpServerLauncher;
 import me.kavin.piped.consts.Constants;
 import me.kavin.piped.utils.*;
-import me.kavin.piped.utils.resp.DeleteUserRequest;
 import me.kavin.piped.utils.resp.ErrorResponse;
-import me.kavin.piped.utils.resp.LoginRequest;
-import me.kavin.piped.utils.resp.SubscriptionUpdateRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.hibernate.Session;
 import org.jetbrains.annotations.NotNull;
-import org.xml.sax.InputSource;
-
-import java.io.ByteArrayInputStream;
 import java.net.InetSocketAddress;
-import java.util.Objects;
 import java.util.concurrent.Executor;
 
 import static io.activej.config.converter.ConfigConverters.ofInetSocketAddress;
 import static io.activej.http.HttpHeaders.*;
 import static io.activej.http.HttpMethod.GET;
-import static io.activej.http.HttpMethod.POST;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class ServerLauncher extends MultithreadedHttpServerLauncher {
@@ -46,43 +35,9 @@ public class ServerLauncher extends MultithreadedHttpServerLauncher {
     AsyncServlet mainServlet(Executor executor) {
 
         RoutingServlet router = RoutingServlet.create()
-                .map(GET, "/healthcheck", AsyncServlet.ofBlocking(executor, request -> {
-                    try (Session ignored = DatabaseSessionFactory.createSession()) {
-                        return getRawResponse("OK".getBytes(UTF_8), "text/plain", "no-store");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(GET, "/config", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        return getJsonResponse(ResponseHelper.configResponse(), "public, max-age=86400");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                }))
                 .map(GET, "/version", AsyncServlet.ofBlocking(executor, request -> getRawResponse(Constants.VERSION.getBytes(UTF_8), "text/plain", "no-store")))
                 .map(HttpMethod.OPTIONS, "/*", request -> HttpResponse.ofCode(200))
-                .map(GET, "/webhooks/pubsub", request -> HttpResponse.ok200().withPlainText(Objects.requireNonNull(request.getQueryParameter("hub.challenge"))))
-                .map(POST, "/webhooks/pubsub", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-
-                        SyndFeed feed = new SyndFeedInput().build(
-                                new InputSource(new ByteArrayInputStream(request.loadBody().getResult().asArray())));
-
-                        Multithreading.runAsync(() -> {
-                            for (var entry : feed.getEntries()) {
-                                String url = entry.getLinks().get(0).getHref();
-                                if (DatabaseHelper.getVideoFromId(StringUtils.substring(url, -11)) != null)
-                                    continue;
-                                ResponseHelper.handleNewVideo(url, entry.getPublishedDate().getTime(), null);
-                            }
-                        });
-
-                        return HttpResponse.ofCode(204);
-
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(GET, "/sponsors/:videoId", AsyncServlet.ofBlocking(executor, request -> {
+                .map(GET, "/sponsors/:videoId", AsyncServlet.ofBlocking(executor, request -> {
                     try {
                         return getJsonResponse(
                                 SponsorBlockUtils.getSponsors(request.getPathParameter("videoId"),
@@ -153,22 +108,6 @@ public class ServerLauncher extends MultithreadedHttpServerLauncher {
                     } catch (Exception e) {
                         return getErrorResponse(e, request.getPath());
                     }
-                })).map(GET, "/rss/playlists/:playlistId", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        return getRawResponse(
-                                ResponseHelper.playlistRSSResponse(request.getPathParameter("playlistId")),
-                                "application/atom+xml", "public, s-maxage=600");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                    // TODO: Replace with opensearch, below, for caching reasons.
-                })).map(GET, "/suggestions", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        return getJsonResponse(ResponseHelper.suggestionsResponse(request.getQueryParameter("query")),
-                                "public, max-age=600");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
                 })).map(GET, "/opensearch/suggestions", AsyncServlet.ofBlocking(executor, request -> {
                     try {
                         return getJsonResponse(
@@ -214,184 +153,7 @@ public class ServerLauncher extends MultithreadedHttpServerLauncher {
                     } catch (Exception e) {
                         return getErrorResponse(e, request.getPath());
                     }
-                })).map(POST, "/register", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        LoginRequest body = Constants.mapper.readValue(request.loadBody().getResult().asArray(),
-                                LoginRequest.class);
-                        return getJsonResponse(ResponseHelper.registerResponse(body.username, body.password),
-                                "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(POST, "/login", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        LoginRequest body = Constants.mapper.readValue(request.loadBody().getResult().asArray(),
-                                LoginRequest.class);
-                        return getJsonResponse(ResponseHelper.loginResponse(body.username, body.password), "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(POST, "/subscribe", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        SubscriptionUpdateRequest body = Constants.mapper
-                                .readValue(request.loadBody().getResult().asArray(), SubscriptionUpdateRequest.class);
-                        return getJsonResponse(
-                                ResponseHelper.subscribeResponse(request.getHeader(AUTHORIZATION), body.channelId),
-                                "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(POST, "/unsubscribe", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        SubscriptionUpdateRequest body = Constants.mapper
-                                .readValue(request.loadBody().getResult().asArray(), SubscriptionUpdateRequest.class);
-                        return getJsonResponse(
-                                ResponseHelper.unsubscribeResponse(request.getHeader(AUTHORIZATION), body.channelId),
-                                "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(GET, "/subscribed", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        return getJsonResponse(ResponseHelper.isSubscribedResponse(request.getHeader(AUTHORIZATION),
-                                request.getQueryParameter("channelId")), "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(GET, "/feed", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        return getJsonResponse(ResponseHelper.feedResponse(request.getQueryParameter("authToken")),
-                                "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(GET, "/feed/rss", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        return getRawResponse(ResponseHelper.feedResponseRSS(request.getQueryParameter("authToken")),
-                                "application/atom+xml", "public, s-maxage=120");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(GET, "/feed/unauthenticated", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        return getJsonResponse(ResponseHelper.unauthenticatedFeedResponse(
-                                Objects.requireNonNull(request.getQueryParameter("channels")).split(",")
-                        ), "public, s-maxage=120");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(GET, "/feed/unauthenticated/rss", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        return getRawResponse(ResponseHelper.unauthenticatedFeedResponseRSS(
-                                Objects.requireNonNull(request.getQueryParameter("channels")).split(",")
-                        ), "application/atom+xml", "public, s-maxage=120");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(POST, "/import", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        String[] subscriptions = Constants.mapper.readValue(request.loadBody().getResult().asArray(),
-                                String[].class);
-                        return getJsonResponse(ResponseHelper.importResponse(request.getHeader(AUTHORIZATION),
-                                subscriptions, Boolean.parseBoolean(request.getQueryParameter("override"))), "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(POST, "/import/playlist", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        var json = Constants.mapper.readTree(request.loadBody().getResult().asArray());
-                        var playlistId = json.get("playlistId").textValue();
-                        return getJsonResponse(ResponseHelper.importPlaylistResponse(request.getHeader(AUTHORIZATION), playlistId), "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(GET, "/subscriptions", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        return getJsonResponse(ResponseHelper.subscriptionsResponse(request.getHeader(AUTHORIZATION)),
-                                "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(GET, "/subscriptions/unauthenticated", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        return getJsonResponse(ResponseHelper.unauthenticatedSubscriptionsResponse(
-                                Objects.requireNonNull(request.getQueryParameter("channels")).split(",")
-                        ), "public, s-maxage=120");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(POST, "/user/playlists/create", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        var name = Constants.mapper.readTree(request.loadBody().getResult().asArray()).get("name").textValue();
-                        return getJsonResponse(ResponseHelper.createPlaylist(request.getHeader(AUTHORIZATION), name), "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(GET, "/user/playlists", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        return getJsonResponse(ResponseHelper.playlistsResponse(request.getHeader(AUTHORIZATION)), "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(POST, "/user/playlists/add", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        var json = Constants.mapper.readTree(request.loadBody().getResult().asArray());
-                        var playlistId = json.get("playlistId").textValue();
-                        var videoId = json.get("videoId").textValue();
-                        return getJsonResponse(ResponseHelper.addToPlaylistResponse(request.getHeader(AUTHORIZATION), playlistId, videoId), "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(POST, "/user/playlists/remove", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        var json = Constants.mapper.readTree(request.loadBody().getResult().asArray());
-                        var playlistId = json.get("playlistId").textValue();
-                        var index = json.get("index").intValue();
-                        return getJsonResponse(ResponseHelper.removeFromPlaylistResponse(request.getHeader(AUTHORIZATION), playlistId, index), "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(POST, "/user/playlists/rename", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        var json = Constants.mapper.readTree(request.loadBody().getResult().asArray());
-                        var playlistId = json.get("playlistId").textValue();
-                        var newName = json.get("newName").textValue();
-                        return getJsonResponse(ResponseHelper.renamePlaylistResponse(request.getHeader(AUTHORIZATION), playlistId, newName), "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(POST, "/user/playlists/delete", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        var json = Constants.mapper.readTree(request.loadBody().getResult().asArray());
-                        var playlistId = json.get("playlistId").textValue();
-                        return getJsonResponse(ResponseHelper.deletePlaylistResponse(request.getHeader(AUTHORIZATION), playlistId), "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(GET, "/registered/badge", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        return HttpResponse.ofCode(302).withHeader(LOCATION, ResponseHelper.registeredBadgeRedirect())
-                                .withHeader(CACHE_CONTROL, "public, max-age=30");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(POST, "/user/delete", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        DeleteUserRequest body = Constants.mapper.readValue(request.loadBody().getResult().asArray(),
-                                DeleteUserRequest.class);
-                        return getJsonResponse(ResponseHelper.deleteUserResponse(request.getHeader(AUTHORIZATION), body.password),
-                                "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(POST, "/logout", AsyncServlet.ofBlocking(executor, request -> {
-                    try {
-                        return getJsonResponse(ResponseHelper.logoutResponse(request.getHeader(AUTHORIZATION)), "private");
-                    } catch (Exception e) {
-                        return getErrorResponse(e, request.getPath());
-                    }
-                })).map(GET, "/", AsyncServlet.ofBlocking(executor, request -> HttpResponse.redirect302(Constants.FRONTEND_URL)));
-
+                }));
         return new CustomServletDecorator(router);
     }
 
