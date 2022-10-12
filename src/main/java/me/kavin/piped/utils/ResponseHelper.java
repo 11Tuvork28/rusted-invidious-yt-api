@@ -3,9 +3,7 @@ package me.kavin.piped.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonWriter;
-import com.rometools.rome.feed.synd.*;
-import com.rometools.rome.io.FeedException;
-import com.rometools.rome.io.SyndFeedOutput;
+
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import me.kavin.piped.consts.Constants;
 import me.kavin.piped.utils.obj.Channel;
