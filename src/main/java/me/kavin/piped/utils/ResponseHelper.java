@@ -167,13 +167,13 @@ public class ResponseHelper {
                 info.setDislikeCount(Math.round(info.getLikeCount() * ((5 - rating) / (rating - 1))));
             }
         }
-
+        
         final Streams streams = new Streams(info.getName(), info.getDescription().getContent(),
                 info.getTextualUploadDate(), info.getUploaderName(), substringYouTube(info.getUploaderUrl()),
                 rewriteURL(info.getUploaderAvatarUrl()), rewriteURL(info.getThumbnailUrl()), info.getDuration(),
                 info.getViewCount(), info.getLikeCount(), info.getDislikeCount(), info.getUploaderSubscriberCount(), info.isUploaderVerified(),
                 audioStreams, videoStreams, relatedStreams, subtitles, livestream, rewriteVideoURL(info.getHlsUrl()),
-                rewriteVideoURL(info.getDashMpdUrl()), lbryId, chapters);
+                rewriteVideoURL(info.getDashMpdUrl()), lbryId, chapters, info.getTags(), info.getPrivacy(),info.getLicence(), info.getCategory(), info.getSupportInfo(),info.getMetaInfo(), info.getAgeLimit());
 
         return mapper.writeValueAsBytes(streams);
 
