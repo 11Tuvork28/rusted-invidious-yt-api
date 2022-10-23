@@ -173,7 +173,7 @@ public class ResponseHelper {
                 rewriteURL(info.getUploaderAvatarUrl()), rewriteURL(info.getThumbnailUrl()), info.getDuration(),
                 info.getViewCount(), info.getLikeCount(), info.getDislikeCount(), info.getUploaderSubscriberCount(), info.isUploaderVerified(),
                 audioStreams, videoStreams, relatedStreams, subtitles, livestream, rewriteVideoURL(info.getHlsUrl()),
-                rewriteVideoURL(info.getDashMpdUrl()), lbryId, chapters, info.getTags(), info.getPrivacy(),info.getLicence(), info.getCategory(), info.getSupportInfo(),info.getMetaInfo(), info.getAgeLimit());
+                rewriteVideoURL(info.getDashMpdUrl()), lbryId, chapters, info.getTags(), info.getPrivacy(),info.getLicence(), info.getCategory(), info.getSupportInfo(),info.getMetaInfo(), info.getAgeLimit(), videoId);
 
         return mapper.writeValueAsBytes(streams);
 

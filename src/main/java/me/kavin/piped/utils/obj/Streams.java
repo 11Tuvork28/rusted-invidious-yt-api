@@ -10,7 +10,7 @@ import org.schabi.newpipe.extractor.stream.StreamExtractor;
 public class Streams {
 
     public String title, description, uploadDate, uploader, uploaderUrl, uploaderAvatar, thumbnailUrl, hls, dash,
-            lbryId, licence,category,supportInfo;
+            lbryId, licence, category, supportInfo;
 
     public boolean uploaderVerified;
 
@@ -29,18 +29,22 @@ public class Streams {
     public List<ChapterSegment> chapters;
 
     public StreamExtractor.Privacy privacy;
-    
+
     public List<String> tags;
 
     public List<MetaInfo> metaInfo;
 
     public int ageLimit;
 
+    public String id;
+
     public Streams(String title, String description, String uploadDate, String uploader, String uploaderUrl,
-                   String uploaderAvatar, String thumbnailUrl, long duration, long views, long likes, long dislikes, long uploaderSubscriberCount,
-                   boolean uploaderVerified, List<PipedStream> audioStreams, List<PipedStream> videoStreams,
-                   List<StreamItem> relatedStreams, List<Subtitle> subtitles, boolean livestream, String hls, String dash,
-                   String lbryId, List<ChapterSegment> chapters, List<String> tags, StreamExtractor.Privacy privacy, String licence, String category, String supportInfo,List<MetaInfo> metaInfo, int ageLimit) {
+            String uploaderAvatar, String thumbnailUrl, long duration, long views, long likes, long dislikes,
+            long uploaderSubscriberCount,
+            boolean uploaderVerified, List<PipedStream> audioStreams, List<PipedStream> videoStreams,
+            List<StreamItem> relatedStreams, List<Subtitle> subtitles, boolean livestream, String hls, String dash,
+            String lbryId, List<ChapterSegment> chapters, List<String> tags, StreamExtractor.Privacy privacy,
+            String licence, String category, String supportInfo, List<MetaInfo> metaInfo, int ageLimit, String id) {
         this.title = title;
         this.description = description;
         this.uploadDate = uploadDate;
@@ -69,5 +73,6 @@ public class Streams {
         this.supportInfo = supportInfo;
         this.metaInfo = metaInfo;
         this.ageLimit = ageLimit;
+        this.id = id;
     }
 }
