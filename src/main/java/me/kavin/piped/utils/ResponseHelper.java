@@ -10,7 +10,9 @@ import me.kavin.piped.utils.obj.Channel;
 import me.kavin.piped.utils.obj.Playlist;
 import me.kavin.piped.utils.obj.*;
 import me.kavin.piped.utils.obj.search.SearchChannel;
+import me.kavin.piped.utils.obj.search.SearchItem;
 import me.kavin.piped.utils.obj.search.SearchPlaylist;
+import me.kavin.piped.utils.obj.search.SearchStream;
 import me.kavin.piped.utils.resp.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -352,11 +354,11 @@ public class ResponseHelper {
         final SearchInfo info = SearchInfo.getInfo(YOUTUBE_SERVICE,
                 YOUTUBE_SERVICE.getSearchQHFactory().fromQuery(q, Collections.singletonList(filter), null));
 
-        ObjectArrayList<Object> items = new ObjectArrayList<>();
+        ObjectArrayList<SearchItem> items = new ObjectArrayList<>();
 
         info.getRelatedItems().forEach(item -> {
             switch (item.getInfoType()) {
-                case STREAM -> items.add(collectRelatedStream(item));
+                case STREAM -> items.add(collectSearchStream(item));
                 case CHANNEL -> {
                     ChannelInfoItem channel = (ChannelInfoItem) item;
                     items.add(new SearchChannel(item.getName(), rewriteURL(item.getThumbnailUrl()),
@@ -389,11 +391,11 @@ public class ResponseHelper {
         InfoItemsPage<InfoItem> pages = SearchInfo.getMoreItems(YOUTUBE_SERVICE,
                 YOUTUBE_SERVICE.getSearchQHFactory().fromQuery(q, Collections.singletonList(filter), null), prevpage);
 
-        ObjectArrayList<Object> items = new ObjectArrayList<>();
+        ObjectArrayList<SearchItem> items = new ObjectArrayList<>();
 
         pages.getItems().forEach(item -> {
             switch (item.getInfoType()) {
-                case STREAM -> items.add(collectRelatedStream(item));
+                case STREAM -> items.add(collectSearchStream(item));
                 case CHANNEL -> {
                     ChannelInfoItem channel = (ChannelInfoItem) item;
                     items.add(new SearchChannel(item.getName(), rewriteURL(item.getThumbnailUrl()),
@@ -491,6 +493,16 @@ public class ResponseHelper {
         StreamInfoItem item = (StreamInfoItem) o;
 
         return new StreamItem(substringYouTube(item.getUrl()), item.getName(), rewriteURL(item.getThumbnailUrl()),
+                item.getUploaderName(), substringYouTube(item.getUploaderUrl()),
+                rewriteURL(item.getUploaderAvatarUrl()), item.getTextualUploadDate(), item.getShortDescription(), item.getDuration(),
+                item.getViewCount(), item.getUploadDate() != null ? item.getUploadDate().offsetDateTime().toInstant().toEpochMilli() : -1, item.isUploaderVerified());
+    }
+
+    private static SearchStream collectSearchStream(Object o) {
+
+        StreamInfoItem item = (StreamInfoItem) o;
+
+        return new SearchStream(substringYouTube(item.getUrl()), item.getName(), rewriteURL(item.getThumbnailUrl()),
                 item.getUploaderName(), substringYouTube(item.getUploaderUrl()),
                 rewriteURL(item.getUploaderAvatarUrl()), item.getTextualUploadDate(), item.getShortDescription(), item.getDuration(),
                 item.getViewCount(), item.getUploadDate() != null ? item.getUploadDate().offsetDateTime().toInstant().toEpochMilli() : -1, item.isUploaderVerified());

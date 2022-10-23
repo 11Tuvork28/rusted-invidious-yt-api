@@ -18,4 +18,8 @@ public class SearchPlaylist extends SearchItem {
     public long getVideos() {
         return videos;
     }
+    @Override
+    public String getInfoType(){
+        return "SearchPlaylist";
+    }
 }

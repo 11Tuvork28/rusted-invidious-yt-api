@@ -30,4 +30,8 @@ public class SearchChannel extends SearchItem {
     public boolean isVerified() {
         return verified;
     }
+    @Override
+    public String getInfoType(){
+        return "SearchChannel";
+    }
 }
