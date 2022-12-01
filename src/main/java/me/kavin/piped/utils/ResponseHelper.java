@@ -120,7 +120,7 @@ public class ResponseHelper {
         }
 
         if (lbryURL != null)
-            videoStreams.add(new PipedStream(lbryURL, "MP4", "LBRY", "video/mp4", false));
+            videoStreams.add(new PipedStream(lbryURL, "MP4", "LBRY", "video/mp4", false, 0));
 
         boolean livestream = info.getStreamType() == StreamType.LIVE_STREAM;
 
@@ -128,17 +128,17 @@ public class ResponseHelper {
             info.getVideoOnlyStreams().forEach(stream -> videoStreams.add(new PipedStream(rewriteVideoURL(stream.getContent()),
                     String.valueOf(stream.getFormat()), stream.getResolution(), stream.getFormat().getMimeType(), true,
                     stream.getBitrate(), stream.getInitStart(), stream.getInitEnd(), stream.getIndexStart(),
-                    stream.getIndexEnd(), stream.getCodec(), stream.getWidth(), stream.getHeight(), 30)));
+                    stream.getIndexEnd(), stream.getCodec(), stream.getWidth(), stream.getHeight(), 30, stream.getItag())));
             info.getVideoStreams()
                     .forEach(stream -> videoStreams
                             .add(new PipedStream(rewriteVideoURL(stream.getContent()), String.valueOf(stream.getFormat()),
-                                    stream.getResolution(), stream.getFormat().getMimeType(), false)));
+                                    stream.getResolution(), stream.getFormat().getMimeType(), false, stream.getItag())));
 
             info.getAudioStreams()
                     .forEach(stream -> audioStreams.add(new PipedStream(rewriteVideoURL(stream.getContent()),
                             String.valueOf(stream.getFormat()), stream.getAverageBitrate() + " kbps",
                             stream.getFormat().getMimeType(), false, stream.getBitrate(), stream.getInitStart(),
-                            stream.getInitEnd(), stream.getIndexStart(), stream.getIndexEnd(), stream.getCodec())));
+                            stream.getInitEnd(), stream.getIndexStart(), stream.getIndexEnd(), stream.getCodec(), stream.getItag())));
         }
 
         final List<StreamItem> relatedStreams = new ObjectArrayList<>();
