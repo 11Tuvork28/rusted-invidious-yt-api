@@ -2,7 +2,7 @@ package me.kavin.piped.utils.obj.search;
 
 public class SearchChannel extends SearchItem {
 
-    private String description;
+    private String description, url;
     private long subscribers, videos;
     private boolean verified;
 
@@ -13,6 +13,7 @@ public class SearchChannel extends SearchItem {
         this.subscribers = subscribers;
         this.videos = videos;
         this.verified = verified;
+        this.url = url;
     }
 
     public String getDescription() {
@@ -29,6 +30,9 @@ public class SearchChannel extends SearchItem {
 
     public boolean isVerified() {
         return verified;
+    }
+    public String getUrl() {
+        return url;
     }
     @Override
     public String getInfoType(){
